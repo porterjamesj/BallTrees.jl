@@ -61,5 +61,8 @@ balls = [Ball([0,0],2),Ball([0,0],1),Ball([1,1],1),Ball([5,5],1)]
 @test BallTrees.intersects(balls[1],balls[3]) == true
 @test BallTrees.intersects(balls[1],balls[4]) == false
 
+# contains should return true even if the edges kiss
+@test BallTrees.contains(balls[1],Ball([0,1],1)) == true
+
 # done!
 println("All tests passed!")
