@@ -105,4 +105,20 @@ end
 # euclidean is the default metric
 kd_construct{T<:Number}(balls::Array{Ball{T}}) = kd_construct(balls,DEFAULT_METRIC)
 
+
+# Querying
+
+function contains(outer::Ball,inner::Ball,metric::Metric)
+    dist = evaluate(metric::Metric,outer.center,inner.center)
+    dist + inner.radius < outer.radius
+end
+contains(outer::Ball,inner::Ball) = contains(outer,inner,DEFAULT_METRIC)
+
+
+function intersects(b1::Ball,b2::Ball,metric::Metric)
+    dist = evaluate(metric::Metric,b1.center,b2.center)
+    dist < b1.radius+ b2.radius
+end
+intersects(b1::Ball,b2::Ball) = intersects(b1,b2,DEFAULT_METRIC)
+
 end # module BallTrees

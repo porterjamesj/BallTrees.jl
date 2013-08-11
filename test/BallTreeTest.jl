@@ -28,6 +28,9 @@ begin
     @test_approx_eq boundb.center[2] 2
 end
 
+
+# Construction
+
 #test build_blt_for_range
 
 # simple test
@@ -46,6 +49,17 @@ rootnode = BallTrees.build_blt_for_range(1,3,balls,Euclidean())
 @test_approx_eq rootnode.left.ball.center[2] 3
 @test rootnode.left.left.left == nothing
 @test rootnode.right.right == nothing
+
+
+# Querying
+
+# contains / intersects
+balls = [Ball([0,0],2),Ball([0,0],1),Ball([1,1],1),Ball([5,5],1)]
+@test BallTrees.contains(balls[1],balls[2]) == true
+@test BallTrees.contains(balls[1],balls[3]) == false
+@test BallTrees.intersects(balls[1],balls[2]) == true
+@test BallTrees.intersects(balls[1],balls[3]) == true
+@test BallTrees.intersects(balls[1],balls[4]) == false
 
 # done!
 println("All tests passed!")
