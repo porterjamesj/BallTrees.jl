@@ -7,6 +7,9 @@ using Distance
 export Ball, BallNode, BallTree,
        kd_construct
 
+# constants
+const DEFAULT_METRIC = Euclidean()
+
 # type definitions
 
 type Ball{T<:Number}
@@ -100,6 +103,6 @@ function kd_construct{T<:Number}(balls::Array{Ball{T}},metric::Metric)
 end
 
 # euclidean is the default metric
-kd_construct(balls::Array{Ball}) = kd_construct(balls,Euclidean())
+kd_construct{T<:Number}(balls::Array{Ball{T}}) = kd_construct(balls,DEFAULT_METRIC)
 
 end # module BallTrees
