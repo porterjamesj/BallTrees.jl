@@ -62,27 +62,27 @@ function midpoint{T<:Number}(v1::Array{T}, v2::Array{T})
 end
 
 # construct a bounding ball for any two given balls
-function bounding_ball{T<:Number,W<:Number}(b1::Ball{T}, b2::Ball{W}, dist::Metric)
+function bounding_ball{T<:Number,W<:Number}(b1::Ball{T}, b2::Ball{W}, metric::Metric)
     span = b1.center - b2.center
     unitvec = span / norm(span)
     p1 = b1.center + (unitvec * b1.radius)
     p2 = b2.center - (unitvec * b2.radius)
     center = midpoint(p1,p2)
-    return Ball(center,evaluate(dist,p1,p2)/2)
+    return Ball(center,evaluate(metric,p1,p2)/2)
 end
 
 # recursive ball tree construction, works kind of a like a kd tree construction
 function build_blt_for_range{T<:Number}(l::Int, u::Int,
-                                        balls::Array{Ball{T}}, dist::Metric)
+                                        balls::Array{Ball{T}}, metric::Metric)
     if u == l
         return BallNode(balls[u])
     else
         spliton = most_spread_coord(balls)
         m = ifloor((l+u)/2)
         select!(balls, m, l, u, ord(isless, get_coord(spliton), false, Forward))
-        left = build_blt_for_range(l, m, balls, dist)
-        right = build_blt_for_range(m+1, u, balls, dist)
-        resultball = bounding_ball(left.ball, right.ball, dist)
+        left = build_blt_for_range(l, m, balls, metric)
+        right = build_blt_for_range(m+1, u, balls, metric)
+        resultball = bounding_ball(left.ball, right.ball, metric)
         resultnode = BallNode(resultball, Nothing(), left, right)
         # set parent correctly on child ballnodes
         left.parent = resultnode
@@ -94,8 +94,8 @@ end
 
 # wrapper to construct a ball tree using the kd-esque
 # algorithm.
-function kd_construct(balls::Array{Ball},dist::Metric)
-    rootnode = build_blt_for_range(1,length(balls),balls,dist)
+function kd_construct{T<:Number}(balls::Array{Ball{T}},metric::Metric)
+    rootnode = build_blt_for_range(1,length(balls),balls,metric)
     return BallTree(rootnode)
 end
 
