@@ -14,7 +14,7 @@ const DEFAULT_METRIC = Euclidean()
 
 type Ball{T<:Number}
     center::Array{T}
-    radius::T
+    radius::Number
 end
 
 type BallNode
