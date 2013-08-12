@@ -7,9 +7,6 @@ using Distance
 export Ball, BallNode, BallTree,
        kd_construct
 
-# constants
-const DEFAULT_METRIC = Euclidean()
-
 # type definitions
 
 type Ball{T<:Real}
@@ -36,7 +33,6 @@ BallNode(b::Ball) = BallNode(b, nothing, nothing, nothing)
 Base.show(io::IO, bn::BallNode) =
     Base.show(io, "BallNode(" * string(bn.ball) * ")")
 
-# placeholder
 type BallTree
     tree::BallNode
 end
