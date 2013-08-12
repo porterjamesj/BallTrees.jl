@@ -124,14 +124,20 @@ end
 
 
 function push_containing_leaves(query::Ball,
-                                node::BallNode,
-                                accum::Array{BallNode},
-                                metric::Metric=Euclidean())
-    if node.left == node.right == nothing && contains(node.ball,query,metric=metric)
-        push!(accum,node)
-    elseif node.left != nothing && node.right != nothing # not a leaf node, recurse
-        push_containing_leaves(query,node.left,accum)
-        push_containing_leaves(query,node.right,accum)
+                                  node::BallNode,
+                                  accum::Array{BallNode},
+                                  metric::Metric=Euclidean())
+    if intersects(node.ball,query,metric=metric)
+        if node.left == node.right == nothing #leaf node, add it
+            push!(accum,node)
+        else # internal node
+            if node.left != nothing
+                push_containing_leaves(query,node.left,accum)
+            end
+            if node.right != nothing
+                push_containing_leaves(query,node.right,accum)
+            end
+        end
     end
 end
 
@@ -140,11 +146,17 @@ function push_intersecting_leaves(query::Ball,
                                   node::BallNode,
                                   accum::Array{BallNode},
                                   metric::Metric=Euclidean())
-    if node.left == node.right == nothing && intersects(node.ball,query,metric=metric)
-        push!(accum,node)
-    elseif node.left != nothing && node.right != nothing # not a leaf node, recurse
-        push_intersecting_leaves(query,node.left,accum)
-        push_intersecting_leaves(query,node.right,accum)
+    if intersects(node.ball,query,metric=metric)
+        if node.left == node.right == nothing #leaf node, add it
+            push!(accum,node)
+        else # internal node
+            if node.left != nothing
+                push_intersecting_leaves(query,node.left,accum)
+            end
+            if node.right != nothing
+                push_intersecting_leaves(query,node.right,accum)
+            end
+        end
     end
 end
 
