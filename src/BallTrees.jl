@@ -12,10 +12,17 @@ const DEFAULT_METRIC = Euclidean()
 
 # type definitions
 
-type Ball{T<:Number}
+type Ball{T<:Real}
     center::Array{T}
-    radius::Number
+    radius::T
 end
+
+# promoting constructor for balls
+function Ball{T<:Real,S<:Real}(center::Array{T},radius::S)
+    U = promote_type(T,S)
+    Ball(convert(Array{U},center),convert(U,radius))
+end
+
 
 type BallNode
     ball::Ball
