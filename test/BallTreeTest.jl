@@ -64,5 +64,40 @@ balls = [Ball([0,0],2),Ball([0,0],1),Ball([1,1],1),Ball([5,5],1)]
 # contains should return true even if the edges kiss
 @test BallTrees.contains(balls[1],Ball([0,1],1)) == true
 
+
+# get all leaves containing a query ball
+balls = [Ball([2,2],1),Ball([2,4],1),Ball([6,3],1)]
+rootnode = BallTrees.build_blt_for_range(1,3,balls,Euclidean())
+
+temp = BallNode[]
+
+BallTrees.push_containing_leaves(Ball([5,1],0),rootnode,temp)
+@test temp == []
+
+temp = BallNode[]
+BallTrees.push_containing_leaves(Ball([2,1.5],0),rootnode,temp)
+@test temp == [rootnode.left.right]
+
+
+# get all leaves intersecting a query ball
+balls = [Ball([2,2],1),Ball([2,4],1),Ball([6,3],1)]
+rootnode = BallTrees.build_blt_for_range(1,3,balls,Euclidean())
+
+# should do nothing when no intersection
+temp = BallNode[]
+BallTrees.push_intersecting_leaves(Ball([5,1],0),rootnode,temp)
+@test temp == []
+
+# should return single ball
+temp = BallNode[]
+BallTrees.push_intersecting_leaves(Ball([6,2],1),rootnode,temp)
+@test temp == [rootnode.right]
+
+# should return multiple balls
+temp = BallNode[]
+BallTrees.push_intersecting_leaves(Ball([2,3],1),rootnode,temp)
+@test temp == [rootnode.left.left,rootnode.left.right]
+
+
 # done!
 println("All tests passed!")

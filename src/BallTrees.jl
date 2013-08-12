@@ -122,5 +122,28 @@ end
 intersects(b1::Ball,b2::Ball) = intersects(b1,b2,DEFAULT_METRIC)
 
 
+function push_containing_leaves(query::Ball,
+                             node::BallNode,
+                             accum::Array{BallNode})
+    if node.left == node.right == nothing && contains(node.ball,query)
+        push!(accum,node)
+    elseif node.left != nothing && node.right != nothing # not a leaf node, recurse
+        push_containing_leaves(query,node.left,accum)
+        push_containing_leaves(query,node.right,accum)
+    end
+end
+
+
+function push_intersecting_leaves(query::Ball,
+                             node::BallNode,
+                             accum::Array{BallNode})
+    if node.left == node.right == nothing && intersects(node.ball,query)
+        push!(accum,node)
+    elseif node.left != nothing && node.right != nothing # not a leaf node, recurse
+        push_intersecting_leaves(query,node.left,accum)
+        push_intersecting_leaves(query,node.right,accum)
+    end
+end
+
 
 end # module BallTrees
