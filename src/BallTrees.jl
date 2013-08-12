@@ -161,4 +161,22 @@ function push_intersecting_leaves(query::Ball,
 end
 
 
+function push_contained_leaves(query::Ball,
+                               node::BallNode,
+                               accum::Array{BallNode},
+                               metric::Metric=Euclidean())
+    if node.left == nothing && node.right == nothing
+        if contains(query,node.ball)
+            push!(accum,node)
+        end
+    elseif intersects(query,node.ball)
+        if node.left != nothing
+            push_contained_leaves(query,node.left,accum)
+        end
+        if node.right != nothing
+            push_contained_leaves(query,node.right,accum)
+        end
+    end
+end
+
 end # module BallTrees

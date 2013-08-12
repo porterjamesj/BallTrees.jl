@@ -99,5 +99,21 @@ BallTrees.push_intersecting_leaves(Ball([2,3],1),rootnode,temp)
 @test temp == [rootnode.left.left,rootnode.left.right]
 
 
+# get all leaves contained by a query ball
+
+# should return nothing when no leaves are contained
+temp = BallNode[]
+BallTrees.push_contained_leaves(Ball([6,1],2),rootnode,temp)
+@test temp == []
+
+# should return one ball
+temp = BallNode[]
+BallTrees.push_contained_leaves(Ball([6,2],2),rootnode,temp)
+@test temp == [rootnode.right]
+
+temp = BallNode[]
+BallTrees.push_contained_leaves(Ball([1,3],4),rootnode,temp)
+@test temp == [rootnode.left.left,rootnode.left.right]
+
 # done!
 println("All tests passed!")
