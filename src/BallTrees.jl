@@ -31,11 +31,12 @@ type BallNode
     right::Union(BallNode,Nothing)
 end
 
+BallNode(b::Ball) = BallNode(b, nothing, nothing, nothing)
+
 Base.show(io::IO, bn::BallNode) =
     Base.show(io, "BallNode(" * string(bn.ball) * ")")
 
-BallNode(b::Ball) = BallNode(b, nothing, nothing, nothing)
-
+# placeholder
 type BallTree
     tree::BallNode
 end
@@ -47,7 +48,7 @@ end
 # and associated helpers
 
 # get the most spread coordinate of in an array of balls
-function most_spread_coord{T<:Number}(balls::Array{Ball{T}})
+function most_spread_coord{T<:Real}(balls::Array{Ball{T}})
     centers = [ball.center for ball in balls]
     spreads = max(centers) - min(centers)
     return findmax(spreads)[2]
@@ -62,7 +63,7 @@ function get_coord(coord)
 end
 
 # compute the midpoint of any two points
-function midpoint{T<:Number}(v1::Array{T}, v2::Array{T})
+function midpoint{T<:Real}(v1::Array{T}, v2::Array{T})
     @assert length(v1) == length(v2)
     result = Array(Float64,length(v1)) # better way to do this?
     for dim in 1:length(v1)
@@ -72,7 +73,8 @@ function midpoint{T<:Number}(v1::Array{T}, v2::Array{T})
 end
 
 # construct a bounding ball for any two given balls
-function bounding_ball{T<:Number,W<:Number}(b1::Ball{T}, b2::Ball{W}, metric::Metric)
+function bounding_ball{T<:Real,W<:Real}(b1::Ball{T}, b2::Ball{W};
+                                        metric::Metric = Euclidean())
     span = b1.center - b2.center
     unitvec = span / norm(span)
     p1 = b1.center + (unitvec * b1.radius)
@@ -82,18 +84,19 @@ function bounding_ball{T<:Number,W<:Number}(b1::Ball{T}, b2::Ball{W}, metric::Me
 end
 
 # recursive ball tree construction, works kind of a like a kd tree construction
-function build_blt_for_range{T<:Number}(l::Int, u::Int,
-                                        balls::Array{Ball{T}}, metric::Metric)
+function build_blt_for_range{T<:Real}(l::Int, u::Int,
+                                      balls::Array{Ball{T}};
+                                      metric::Metric=Euclidean())
     if u == l
         return BallNode(balls[u])
     else
         spliton = most_spread_coord(balls)
         m = ifloor((l+u)/2)
         select!(balls, m, l, u, ord(isless, get_coord(spliton), false, Forward))
-        left = build_blt_for_range(l, m, balls, metric)
-        right = build_blt_for_range(m+1, u, balls, metric)
-        resultball = bounding_ball(left.ball, right.ball, metric)
-        resultnode = BallNode(resultball, Nothing(), left, right)
+        left = build_blt_for_range(l, m, balls, metric=metric)
+        right = build_blt_for_range(m+1, u, balls, metric=metric)
+        resultball = bounding_ball(left.ball, right.ball, metric=metric)
+        resultnode = BallNode(resultball, nothing, left, right)
         # set parent correctly on child ballnodes
         left.parent = resultnode
         right.parent = resultnode
@@ -104,35 +107,31 @@ end
 
 # wrapper to construct a ball tree using the kd-esque
 # algorithm.
-function kd_construct{T<:Number}(balls::Array{Ball{T}},metric::Metric)
-    rootnode = build_blt_for_range(1,length(balls),balls,metric)
+function kd_construct{T<:Real}(balls::Array{Ball{T}};metric::Metric=Euclidean())
+    rootnode = build_blt_for_range(1,length(balls),balls,metric=metric)
     return BallTree(rootnode)
 end
-
-# euclidean is the default metric
-kd_construct{T<:Number}(balls::Array{Ball{T}}) = kd_construct(balls,DEFAULT_METRIC)
 
 
 # Querying
 
-function contains(outer::Ball,inner::Ball,metric::Metric)
+function contains(outer::Ball,inner::Ball;metric::Metric=Euclidean())
     dist = evaluate(metric::Metric,outer.center,inner.center)
     dist + inner.radius <= outer.radius
 end
-contains(outer::Ball,inner::Ball) = contains(outer,inner,DEFAULT_METRIC)
 
 
-function intersects(b1::Ball,b2::Ball,metric::Metric)
+function intersects(b1::Ball,b2::Ball;metric::Metric=Euclidean())
     dist = evaluate(metric::Metric,b1.center,b2.center)
     dist < b1.radius+ b2.radius
 end
-intersects(b1::Ball,b2::Ball) = intersects(b1,b2,DEFAULT_METRIC)
 
 
 function push_containing_leaves(query::Ball,
-                             node::BallNode,
-                             accum::Array{BallNode})
-    if node.left == node.right == nothing && contains(node.ball,query)
+                                node::BallNode,
+                                accum::Array{BallNode},
+                                metric::Metric=Euclidean())
+    if node.left == node.right == nothing && contains(node.ball,query,metric=metric)
         push!(accum,node)
     elseif node.left != nothing && node.right != nothing # not a leaf node, recurse
         push_containing_leaves(query,node.left,accum)
@@ -142,9 +141,10 @@ end
 
 
 function push_intersecting_leaves(query::Ball,
-                             node::BallNode,
-                             accum::Array{BallNode})
-    if node.left == node.right == nothing && intersects(node.ball,query)
+                                  node::BallNode,
+                                  accum::Array{BallNode},
+                                  metric::Metric=Euclidean())
+    if node.left == node.right == nothing && intersects(node.ball,query,metric=metric)
         push!(accum,node)
     elseif node.left != nothing && node.right != nothing # not a leaf node, recurse
         push_intersecting_leaves(query,node.left,accum)

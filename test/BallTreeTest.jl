@@ -22,7 +22,7 @@ balls = [Ball([1,1],1), Ball([1,3],1)]
 
 # test bounding_ball
 begin
-    boundb = BallTrees.bounding_ball(balls[1],balls[2],Euclidean())
+    boundb = BallTrees.bounding_ball(balls[1],balls[2])
     @test_approx_eq boundb.radius 2
     @test_approx_eq boundb.center[1] 1
     @test_approx_eq boundb.center[2] 2
@@ -34,7 +34,7 @@ end
 #test build_blt_for_range
 
 # simple test
-rootnode = BallTrees.build_blt_for_range(1,2,balls,Euclidean())
+rootnode = BallTrees.build_blt_for_range(1,2,balls)
 @test_approx_eq rootnode.ball.center[1] 1
 @test_approx_eq rootnode.ball.center[2] 2
 @test rootnode.left.ball.center == [1,1]
@@ -42,7 +42,7 @@ rootnode = BallTrees.build_blt_for_range(1,2,balls,Euclidean())
 
 # a bit harder
 balls = [Ball([2,2],1),Ball([2,4],1),Ball([6,3],1)]
-rootnode = BallTrees.build_blt_for_range(1,3,balls,Euclidean())
+rootnode = BallTrees.build_blt_for_range(1,3,balls)
 @test_approx_eq rootnode.ball.center[1] 3.5
 @test_approx_eq rootnode.ball.center[2] 3
 @test_approx_eq rootnode.left.ball.center[1] 2
@@ -67,7 +67,7 @@ balls = [Ball([0,0],2),Ball([0,0],1),Ball([1,1],1),Ball([5,5],1)]
 
 # get all leaves containing a query ball
 balls = [Ball([2,2],1),Ball([2,4],1),Ball([6,3],1)]
-rootnode = BallTrees.build_blt_for_range(1,3,balls,Euclidean())
+rootnode = BallTrees.build_blt_for_range(1,3,balls)
 
 temp = BallNode[]
 
@@ -81,7 +81,7 @@ BallTrees.push_containing_leaves(Ball([2,1.5],0),rootnode,temp)
 
 # get all leaves intersecting a query ball
 balls = [Ball([2,2],1),Ball([2,4],1),Ball([6,3],1)]
-rootnode = BallTrees.build_blt_for_range(1,3,balls,Euclidean())
+rootnode = BallTrees.build_blt_for_range(1,3,balls)
 
 # should do nothing when no intersection
 temp = BallNode[]
