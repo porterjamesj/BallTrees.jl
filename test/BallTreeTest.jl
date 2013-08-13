@@ -115,5 +115,23 @@ temp = BallNode[]
 BallTrees.push_contained_leaves(Ball([1,3],4),rootnode,temp)
 @test temp == [rootnode.left.left,rootnode.left.right]
 
+# test makebball
+res = BallTrees.makebball([3,1],Ball([1,1],1))
+@test_approx_eq res.center[1] 3
+@test_approx_eq res.center[2] 1
+@test_approx_eq res.radius 3
+
+# test nnsearch
+balls = [Ball([2,2],1),Ball([2,4],1),Ball([6,3],1)]
+rootnode = BallTrees.build_blt_for_range(1,3,balls)
+query = [1,8]
+bball = BallTrees.makebball(query,rootnode.ball)
+@test nnsearch(rootnode,bball).center == [2,4]
+query = [7,8]
+bball = BallTrees.makebball(query,rootnode.ball)
+@test nnsearch(rootnode,bball).center == [6,3]
+
+
+
 # done!
 println("All tests passed!")

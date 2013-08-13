@@ -1,11 +1,12 @@
 module BallTrees
+
 using Base.Order
 using Distance
 
 # exports
 
 export Ball, BallNode, BallTree,
-       kd_construct
+       kd_construct, nnsearch
 
 # type definitions
 
@@ -131,12 +132,8 @@ function push_containing_leaves(query::Ball,
         if node.left == node.right == nothing #leaf node, add it
             push!(accum,node)
         else # internal node
-            if node.left != nothing
-                push_containing_leaves(query,node.left,accum)
-            end
-            if node.right != nothing
-                push_containing_leaves(query,node.right,accum)
-            end
+            push_containing_leaves(query,node.left,accum)
+            push_containing_leaves(query,node.right,accum)
         end
     end
 end
@@ -150,12 +147,8 @@ function push_intersecting_leaves(query::Ball,
         if node.left == node.right == nothing #leaf node, add it
             push!(accum,node)
         else # internal node
-            if node.left != nothing
-                push_intersecting_leaves(query,node.left,accum)
-            end
-            if node.right != nothing
-                push_intersecting_leaves(query,node.right,accum)
-            end
+            push_intersecting_leaves(query,node.left,accum)
+            push_intersecting_leaves(query,node.right,accum)
         end
     end
 end
@@ -170,13 +163,52 @@ function push_contained_leaves(query::Ball,
             push!(accum,node)
         end
     elseif intersects(query,node.ball)
-        if node.left != nothing
-            push_contained_leaves(query,node.left,accum)
-        end
-        if node.right != nothing
-            push_contained_leaves(query,node.right,accum)
-        end
+        push_contained_leaves(query,node.left,accum)
+        push_contained_leaves(query,node.right,accum)
     end
 end
+
+
+# stuff for nearnest neighbor search
+
+
+# make a "bball" for a query point and a root node
+# at which to start the search. The bball is the ball
+# whose center is the query point and whose radius
+# is just big enough to contain the root node's ball.
+function makebball{T<:Real}(query::Array{T}, ball::Ball;
+                            metric=Euclidean())
+    Ball(query, evaluate(metric,query,ball.center) + ball.radius)
+end
+
+
+function nnsearch(node::BallNode,bball::Ball;
+                  metric=Euclidean())
+    if node.left == nothing && node.right == nothing # leaf
+        d = evaluate(metric,bball.center,node.ball.center)
+        if d < bball.radius
+            bball.radius = d
+            nn = node.ball
+        end
+    else # internal node
+        ld = evaluate(metric,node.left.ball.center,bball.center)
+        rd = evaluate(metric,node.right.ball.center,bball.center)
+        if ld < bball.radius && rd < bball.radius # look here
+            if ld <= rd # search nearer node first
+                nn = nnsearch(node.left,bball)
+                if rd < bball.radius
+                    nn = nnsearch(node.right,bball)
+                end
+            else
+                nn = nnsearch(node.right,bball)
+                if rd < bball.radius
+                    nn = nnsearch(node.left,bball)
+                end
+            end
+        end
+    end
+    return nn
+end
+
 
 end # module BallTrees
