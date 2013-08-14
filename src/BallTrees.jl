@@ -182,32 +182,42 @@ function makebball{T<:Real}(query::Array{T}, ball::Ball;
 end
 
 
-function nnsearch(node::BallNode,bball::Ball;
+# Find nearest neighbors of the query point (the center of the bball),
+# starting the search at the given node, storing them in the given
+# priority queue. The bball should be large enough to encompass the
+# start node.
+function nnsearch(node::BallNode,bball::Ball,nns::PriorityQueue,k::Int;
                   metric=Euclidean())
     if node.left == nothing && node.right == nothing # leaf
         d = evaluate(metric,bball.center,node.ball.center)
         if d < bball.radius
-            bball.radius = d
-            nn = node.ball
+            # enqueue and dequeue if necessayr
+            enqueue!(nns,node.ball,d)
+            if length(nns) > k
+                dequeue!(nns)
+            end
+            # adjust the radius of the bball if necessary
+            if length(nns) == k
+                bball.radius = max(values(nns))
+            end
         end
     else # internal node
         ld = evaluate(metric,node.left.ball.center,bball.center)
         rd = evaluate(metric,node.right.ball.center,bball.center)
         if ld < bball.radius && rd < bball.radius # look here
             if ld <= rd # search nearer node first
-                nn = nnsearch(node.left,bball)
-                if rd < bball.radius
-                    nn = nnsearch(node.right,bball)
+                nnsearch(node.left,bball,nns,k)
+                if rd < bball.radius # still worth looking?
+                    nnsearch(node.right,bball,nns,k)
                 end
             else
-                nn = nnsearch(node.right,bball)
-                if rd < bball.radius
-                    nn = nnsearch(node.left,bball)
+                nnsearch(node.right,bball,nns,k)
+                if rd < bball.radius # still worth looking?
+                    nnsearch(node.left,bball,nns,k)
                 end
             end
         end
     end
-    return nn
 end
 
 

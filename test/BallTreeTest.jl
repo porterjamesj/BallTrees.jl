@@ -1,9 +1,4 @@
-using BallTrees
-using Base.Test
-using Distance
-
 balls = [Ball([1,1],1),Ball([3,3],2),Ball([6,2],1)]#,Ball([2,5],4)]
-
 
 # test kd construction and its helpers
 
@@ -124,14 +119,38 @@ res = BallTrees.makebball([3,1],Ball([1,1],1))
 # test nnsearch
 balls = [Ball([2,2],1),Ball([2,4],1),Ball([6,3],1)]
 rootnode = BallTrees.build_blt_for_range(1,3,balls)
+
+pq = PriorityQueue{Ball,Real}()
 query = [1,8]
 bball = BallTrees.makebball(query,rootnode.ball)
-@test nnsearch(rootnode,bball).center == [2,4]
+nnsearch(rootnode,bball,pq,1)
+@test dequeue!(pq).center == [2,4]
+
+pq = PriorityQueue{Ball,Real}()
 query = [7,8]
 bball = BallTrees.makebball(query,rootnode.ball)
-@test nnsearch(rootnode,bball).center == [6,3]
+nnsearch(rootnode,bball,pq,1)
+@test dequeue!(pq).center == [6,3]
 
+# slightly harder test nnsearch
+points = ([1,1],[3,3],[4,3],[2,5],[6,7],[7,2],[9,3])
+balls::Array{Ball{Int}} = [Ball{Int}(p,0) for p in points]
+rootnode = BallTrees.build_blt_for_range(1,7,balls)
 
+pq = PriorityQueue{Ball,Real}()
+query = [2,0.5]
+bball = BallTrees.makebball(query,rootnode.ball)
+nnsearch(rootnode,bball,pq,1)
+@test dequeue!(pq).center == [1,1]
+
+pq = PriorityQueue{Ball,Real}()
+query = [3,4]
+bball = BallTrees.makebball(query,rootnode.ball)
+nnsearch(rootnode,bball,pq,3)
+res = [b.center for b in keys(pq)]
+@test contains(res, [3,3])
+@test contains(res, [4,3])
+@test contains(res, [2,5])
 
 # done!
-println("All tests passed!")
+println("BallTree tests passed!")
