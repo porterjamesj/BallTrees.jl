@@ -1,10 +1,10 @@
 module BallTrees
 
-using Base.Order
-using Distance
+import Base.Order: Forward, ord
+import Distance: evaluate, Metric, Euclidean
+import Base.Collections: PriorityQueue, dequeue!, enqueue!
 
 # exports
-
 export Ball, BallNode, BallTree,
        kd_construct, nnsearch
 
