@@ -18,7 +18,7 @@ end
 # promoting constructor for balls
 function Ball{T<:Real,S<:Real}(center::Array{T},radius::S)
     U = promote_type(T,S)
-    Ball(convert(Array{U},center),convert(U,radius))
+    Ball{U}(convert(Array{U},center),convert(U,radius))
 end
 
 
@@ -53,7 +53,7 @@ end
 
 # returns a curried function to return a specific coord from a
 # ball's center
-function get_coord(coord)
+function get_coord(coord::Int)
     return function(b::Ball)
         return b.center[coord]
     end
@@ -70,8 +70,8 @@ function midpoint{T<:Real}(v1::Array{T}, v2::Array{T})
 end
 
 # construct a bounding ball for any two given balls
-function bounding_ball{T<:Real,W<:Real}(b1::Ball{T}, b2::Ball{W};
-                                        metric::Metric = Euclidean())
+function bounding_ball(b1::Ball, b2::Ball;
+                                metric::Metric = Euclidean())
     span = b1.center - b2.center
     unitvec = span / norm(span)
     p1 = b1.center + (unitvec * b1.radius)
@@ -102,12 +102,12 @@ function build_blt_for_range{T<:Real}(l::Int, u::Int,
 end
 
 
-# wrapper to construct a ball tree using the kd-esque
-# algorithm.
+# wrapper to construct a ball tree using the kd algorithm.
 function kd_construct{T<:Real}(balls::Array{Ball{T}};metric::Metric=Euclidean())
     rootnode = build_blt_for_range(1,length(balls),balls,metric=metric)
     return BallTree(rootnode)
 end
+
 
 
 # Querying
@@ -212,7 +212,7 @@ function nnsearch(node::BallNode,bball::Ball,nns::PriorityQueue,k::Int;
                 end
             else
                 nnsearch(node.right,bball,nns,k)
-                if rd < bball.radius # still worth looking?
+                if ld < bball.radius # still worth looking?
                     nnsearch(node.left,bball,nns,k)
                 end
             end
