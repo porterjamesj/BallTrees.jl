@@ -221,4 +221,17 @@ function nnsearch(node::BallNode,bball::Ball,nns::PriorityQueue,k::Int;
 end
 
 
+# more convenient nnsearch
+# assumes that the distances between different points in your data
+# are measured using the same type of number that your data is
+# represented in. could this be a problem?
+function nnsearch{T<:Real}(tree::BallTree,point::Array{T},k::Int)
+    # make a priority queue
+    pq = PriorityQueue{Ball,T}()
+    # make a bball
+    bball = makebball(point,tree.tree.ball)
+    nnsearch(tree.tree,bball,pq,k::Int)
+    return collect(keys(pq))
+end
+
 end # module BallTrees
